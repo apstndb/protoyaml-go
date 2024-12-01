@@ -17,11 +17,12 @@ package protoyaml
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/goccy/go-yaml/ast"
 
+	"github.com/goccy/go-yaml"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"gopkg.in/yaml.v3"
 )
 
 // Marshal marshals the given message to YAML.
@@ -74,8 +75,7 @@ func (o MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 
 	// Write the JSON back out as YAML
 	buffer := &bytes.Buffer{}
-	encoder := yaml.NewEncoder(buffer)
-	encoder.SetIndent(o.Indent)
+	encoder := yaml.NewEncoder(buffer, yaml.Indent(o.Indent), yaml.IndentSequence(false))
 	if err := encoder.Encode(yamlVal); err != nil {
 		return nil, err
 	}
@@ -85,10 +85,10 @@ func (o MarshalOptions) Marshal(message proto.Message) ([]byte, error) {
 func jsonDataToYAML(data []byte) (interface{}, error) {
 	// YAML unmarshal preserves the order of fields, but is more restrictive than JSON.
 	// Prefer it if the data is valid YAML.
-	jsonNode := &yaml.Node{}
-	if err := yaml.Unmarshal(data, jsonNode); err == nil {
-		if jsonNode.Kind == yaml.DocumentNode {
-			jsonNode = jsonNode.Content[0]
+	var jsonNode ast.Node
+	if err := yaml.Unmarshal(data, &jsonNode); err == nil {
+		if document, ok := jsonNode.(*ast.DocumentNode); ok {
+			jsonNode = document.Body
 		}
 		clearStyle(jsonNode)
 		return jsonNode, nil
@@ -107,9 +107,8 @@ func jsonDataToYAML(data []byte) (interface{}, error) {
 //
 // Without this, the returned YAML will look exactly like the JSON input.
 // TODO: Allow yaml style information to be specified in proto.
-func clearStyle(node *yaml.Node) {
-	node.Style = 0
-	for _, child := range node.Content {
-		clearStyle(child)
+func clearStyle(node ast.Node) {
+	if n, ok := node.(interface{ SetIsFlowStyle(bool) }); ok {
+		n.SetIsFlowStyle(false)
 	}
 }

@@ -1,8 +1,8 @@
 module buf.build/go/protoyaml
 
-go 1.21
+go 1.21.0
 
-toolchain go1.23.1
+toolchain go1.23.2
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.34.2-20240717164558-a6c49f84cc0f.2
@@ -16,6 +16,7 @@ require (
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/goccy/go-yaml v1.15.4 // indirect
 	github.com/google/cel-go v0.21.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
