@@ -16,7 +16,6 @@ package protoyaml
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/goccy/go-yaml/ast"
 
 	"github.com/goccy/go-yaml"
@@ -86,21 +85,24 @@ func jsonDataToYAML(data []byte) (interface{}, error) {
 	// YAML unmarshal preserves the order of fields, but is more restrictive than JSON.
 	// Prefer it if the data is valid YAML.
 	var jsonNode ast.Node
-	if err := yaml.Unmarshal(data, &jsonNode); err == nil {
-		if document, ok := jsonNode.(*ast.DocumentNode); ok {
-			jsonNode = document.Body
-		}
-		clearStyle(jsonNode)
-		return jsonNode, nil
+	if err := yaml.Unmarshal(data, &jsonNode); err != nil {
+		return nil, err
 	}
+	if document, ok := jsonNode.(*ast.DocumentNode); ok {
+		jsonNode = document.Body
+	}
+	clearStyle(jsonNode)
+	return jsonNode, nil
 
 	// If the data is not valid YAML (e.g. a string contains control characters),
 	// fall back to JSON unmarshal, which loses field order, but is more permissive.
-	var jsonValue interface{}
-	if err := json.Unmarshal(data, &jsonValue); err != nil {
-		return nil, err
-	}
-	return jsonValue, nil
+	/*
+		var jsonValue interface{}
+		if err := json.Unmarshal(data, &jsonValue); err != nil {
+			return nil, err
+		}
+		return jsonValue, nil
+	*/
 }
 
 // clearStyle removes all style information from the node and its children.

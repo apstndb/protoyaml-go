@@ -16,15 +16,15 @@ package protoyaml
 
 import (
 	"fmt"
+	"github.com/goccy/go-yaml/ast"
 	"strings"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	"gopkg.in/yaml.v3"
 )
 
 // nodeError is an error that occurred while processing a specific yaml.Node.
 type nodeError struct {
-	Node  *yaml.Node
+	Node  ast.Node
 	Path  string
 	line  string
 	cause error
@@ -38,11 +38,11 @@ func (n *nodeError) Unwrap() error {
 // the lines of the source code are provided.
 func (n *nodeError) Error() string {
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("%s:%d:%d %s\n", n.Path, n.Node.Line, n.Node.Column, n.Unwrap().Error()))
+	result.WriteString(fmt.Sprintf("%s:%d:%d %s\n", n.Path, n.Node.GetToken().Position.Line, n.Node.GetToken().Position.Column, n.Unwrap().Error()))
 	if n.line != "" {
-		lineNum := fmt.Sprintf("%4d", n.Node.Line)
+		lineNum := fmt.Sprintf("%4d", n.Node.GetToken().Position.Line)
 		result.WriteString(fmt.Sprintf("%s | %s\n", lineNum, n.line))
-		marker := strings.Repeat(".", n.Node.Column-1) + "^"
+		marker := strings.Repeat(".", n.Node.GetToken().Position.Column-1) + "^"
 		result.WriteString(fmt.Sprintf("%s | %s\n", lineNum, marker))
 	}
 	return result.String()
